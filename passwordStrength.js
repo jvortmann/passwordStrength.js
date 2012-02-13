@@ -105,57 +105,54 @@
 
   var score = (function(status) {
 
-    var defaultRequirements = [
-      { score: function(password) { return password.length * 4; } },
-      { score: function(password) {
-            var score = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/\d/.test(password[i])) {
-                score = score + 4;
-              }
-            }
-            return score;
-          }
-      },
-      { score: function(password) {
-            var lowercaseLetters = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/[a-z]/.test(password[i])) {
-                lowercaseLetters++;
-              }
-            }
-            if (lowercaseLetters === 0) { return 0};
-            return (password.length - lowercaseLetters) * 2;
-          }
-      },
-      { score: function(password) {
-            var uppercaseLetters = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/[A-Z]/.test(password[i])) {
-                uppercaseLetters++;
-              }
-            }
-            if (uppercaseLetters === 0) { return 0};
-            return (password.length - uppercaseLetters) * 2;
-          }
-      },
-      { score: function(password) {
-            var symbols = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/\W/.test(password[i])) {
-                symbols++;
-              }
-            }
-            return symbols * 6;
-          }
+    var passwordSize = function(password) { 
+      return password.length * 4; 
+    };
+    var containsNumber = function(password) {
+      var score = 0;
+      for (var i = 0; i < password.length; i += 1) {
+        if (/\d/.test(password[i])) {
+          score = score + 4;
+        }
       }
+      return score;
+    };
+    var containsLowercaseLetter = function(password) {
+      var lowercaseLetters = 0;
+      for (var i = 0; i < password.length; i += 1) {
+        if (/[a-z]/.test(password[i])) {
+          lowercaseLetters++;
+        }
+      }
+      if (lowercaseLetters === 0) { return 0};
+      return (password.length - lowercaseLetters) * 2;
+    };
+    var containsUppercaseLetter = function(password) {
+      var uppercaseLetters = 0;
+      for (var i = 0; i < password.length; i += 1) {
+        if (/[A-Z]/.test(password[i])) {
+          uppercaseLetters++;
+        }
+      }
+      if (uppercaseLetters === 0) { return 0};
+      return (password.length - uppercaseLetters) * 2;
+    };
+    var containsSymbols = function(password) {
+      var symbols = 0;
+      for (var i = 0; i < password.length; i += 1) {
+        if (/\W/.test(password[i])) {
+          symbols++;
+        }
+      }
+      return symbols * 6;
+    };
 
-    ];
+    var defaultRequirements = [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter ];
 
     function calculate(password) {
       var rate = 0;
       for (var i = 0; i < defaultRequirements.length; i += 1) {
-        rate = rate + defaultRequirements[i].score(password);
+        rate = rate + defaultRequirements[i](password);
       }
       return rate;
     }
