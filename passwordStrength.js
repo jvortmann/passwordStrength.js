@@ -11,25 +11,99 @@
     parent.appendChild(wrapper.passwordStrength());
 
     element.addEventListener('focusin', function(){
-      score.show(parent);
+      status.show(parent);
     });
     element.addEventListener('focusout', function(){
-      score.hide(parent);
+      status.hide(parent);
     });
     element.addEventListener('input', function(){
-      score.calculate(element.value);
-      score.update(parent);
+      var rate = score.calculate(element.value);
+      status.update(parent, rate);
     });
   };
 
-  var score = (function Score() {
+  var status = (function() {
     var NONE_RATE = 0;
     var WEAK_LIMIT = 1;
     var GOOD_LIMIT = 29;
     var STRONG_LIMIT = 59;
     var VERY_STRONG_LIMIT = 89;
 
-    var rate = 0;
+    function innerTextNode(text, status) {
+      var element = document.createElement("span");
+      element.className = "score";
+      element.innerHTML = text;
+      element.classList.add(status);
+
+      return element;
+    };
+
+    function none() {
+      return innerTextNode("None", "none");
+    };
+
+    function weak() {
+      return innerTextNode("Weak", "weak");
+    };
+
+    function good() {
+      return innerTextNode("Good", "good");
+    };
+
+    function strong() {
+      return innerTextNode("Strong", "strong");
+    };
+
+    function veryStrong() {
+      return innerTextNode("Very Strong", "very_strong");
+    };
+
+    function show(parent) {
+      var element_score = parent.getElementsByClassName("score")[0];
+      element_score.classList.remove("hidden");
+    };
+
+    function hide(parent) {
+      var element_score = parent.getElementsByClassName("score")[0];
+      element_score.classList.add("hidden");
+    };
+
+    function replace(parent, newStatus) {
+      var elementStrength = parent.getElementsByClassName("password_strength")[0];
+      var elementStatus = elementStrength.getElementsByClassName("score")[0];
+
+      elementStrength.removeChild(elementStatus);
+      elementStrength.appendChild(newStatus);
+    };
+
+    function update(parent, rate) {
+      if (rate >= VERY_STRONG_LIMIT) {
+        replace(parent, status.veryStrong());
+      } else if (rate >= STRONG_LIMIT) {
+        replace(parent, status.strong());
+      } else if (rate >= GOOD_LIMIT){
+        replace(parent, status.good());
+      } else if (rate >= WEAK_LIMIT){
+        replace(parent, status.weak());
+      } else {
+        replace(parent, status.none());
+      }
+    };
+
+    return {
+      none : none,
+      weak : weak,
+      good : good,
+      strong : strong,
+      veryStrong : veryStrong,
+      show: show,
+      hide: hide,
+      update: update
+    }
+
+  }());
+
+  var score = (function(status) {
 
     var defaultRequirements = [
       { score: function(password) { return password.length * 4; } },
@@ -78,106 +152,24 @@
 
     ];
 
-    function innerTextNode() {
-      var text = document.createElement("span");
-      text.className = "score";
-
-      return text;
-    };
-
-    function replace(parent, newScore) {
-      var element_strength = parent.getElementsByClassName("password_strength")[0];
-      var element_score = element_strength.getElementsByClassName("score")[0];
-
-      element_strength.removeChild(element_score);
-      element_strength.appendChild(newScore);
-    };
-
-    function show(parent) {
-      var element_score = parent.getElementsByClassName("score")[0];
-      element_score.classList.remove("hidden");
-    };
-
-    function hide(parent) {
-      var element_score = parent.getElementsByClassName("score")[0];
-      element_score.classList.add("hidden");
-    };
-
-    function none() {
-      var text = innerTextNode();
-      text.innerHTML = "None";
-      text.classList.add("none");
-
-      return text;
-    };
-
-    function weak() {
-      var text = innerTextNode();
-      text.innerHTML = "Weak";
-      text.classList.add("weak");
-
-      return text;
-    };
-
-    function good() {
-      var text = innerTextNode();
-      text.innerHTML = "Good";
-      text.classList.add("good");
-
-      return text;
-    };
-
-    function strong() {
-      var text = innerTextNode();
-      text.innerHTML = "Strong";
-      text.classList.add("strong");
-
-      return text;
-    };
-
-    function veryStrong() {
-      var text = innerTextNode();
-      text.innerHTML = "Very Strong";
-      text.classList.add("very_strong");
-
-      return text;
-    };
-
-    function calculateRate(password) {
-      rate = 0;
+    function calculate(password) {
+      var rate = 0;
       for (var i = 0; i < defaultRequirements.length; i += 1) {
         rate = rate + defaultRequirements[i].score(password);
       }
-    }
-
-    function update(parent) {
-      if (rate >= VERY_STRONG_LIMIT) {
-        replace(parent, veryStrong());
-      } else if (rate >= STRONG_LIMIT) {
-        replace(parent, strong());
-      } else if (rate >= GOOD_LIMIT){
-        replace(parent, good());
-      } else if (rate >= WEAK_LIMIT){
-        replace(parent, weak());
-      } else {
-        replace(parent, none());
-      }
+      return rate;
     }
 
     return { 
-      show: show,
-      hide: hide,
-      none: none,
-      calculate: calculateRate,
-      update: update
+      calculate: calculate,
     };
 
-  }());
+  }(status));
 
-  var wrapper = (function Wrapper(score) {
+  var wrapper = (function(status) {
     return {
       passwordStrength : function() {
-        var inner = score.none();
+        var inner = status.none();
         inner.classList.add("hidden");
         var wrapper = document.createElement("div");
         wrapper.className = "password_strength";
@@ -187,7 +179,7 @@
       }
 
     };
-  }(score));
+  }(status));
 
   return passwordStrength;
 });
