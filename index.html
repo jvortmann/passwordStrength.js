@@ -7,7 +7,12 @@
     </head>
     <body>
       <div id="password_wrapper">
+        <label for="password">Password</label>
         <input type="password" id="password" />
       </div>
+      <script>
+        var pass = document.getElementById('password');
+        passwordStrength(pass);
+      </script>
     </body>
   </html>
