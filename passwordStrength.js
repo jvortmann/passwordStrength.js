@@ -6,28 +6,47 @@
 
 })('passwordStrength', function definition() {
 
-  function passwordStrength(element) {
-    var parent = element.parentElement;
-    parent.appendChild(wrapper.passwordStrength());
+  var defaultDefinitions = (function(){
+    function getFlatScore(password, regex, bonus) {
+      var score = 0;
+      for (var i = 0; i < password.length; i += 1) {
+        if (regex.test(password[i])) {
+          score = score + bonus;
+        }
+      }
+      return score;
+    }
 
-    element.addEventListener('focusin', function(){
-      status.show(parent);
-    });
-    element.addEventListener('focusout', function(){
-      status.hide(parent);
-    });
-    element.addEventListener('input', function(){
-      var rate = score.calculate(element.value);
-      status.update(parent, rate);
-    });
-  };
+    function getConditionalIncrementalScore(password, regex, bonus) {
+      var score = getFlatScore(password, regex, bonus);
 
-  var status = (function() {
-    var NONE_RATE = 0;
-    var WEAK_LIMIT = 1;
-    var GOOD_LIMIT = 29;
-    var STRONG_LIMIT = 59;
-    var VERY_STRONG_LIMIT = 89;
+      if (score === 0) { return 0};
+      return (password.length - score) * 2;
+    }
+
+    var passwordSize = function(password) {
+      return password.length * 4;
+    };
+    var containsNumber = function(password) {
+      return getFlatScore(password, /\d/, 4);
+    };
+    var containsLowercaseLetter = function(password) {
+      return getConditionalIncrementalScore(password, /[a-z]/, 1);
+    };
+    var containsUppercaseLetter = function(password) {
+      return getConditionalIncrementalScore(password, /[A-Z]/, 1);
+    };
+    var containsSymbols = function(password) {
+      return getFlatScore(password, /\W/, 6);
+    };
+
+    return {
+      limits : { none: 0, weak: 1, good: 29, strong: 59, veryStrong: 89},
+      requirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ]
+    }
+  }());
+
+  var status = function(definitions) {
 
     function innerTextNode(text, status) {
       var element = document.createElement("span");
@@ -77,85 +96,34 @@
     };
 
     function update(parent, rate) {
-      if (rate >= VERY_STRONG_LIMIT) {
-        replace(parent, status.veryStrong());
-      } else if (rate >= STRONG_LIMIT) {
-        replace(parent, status.strong());
-      } else if (rate >= GOOD_LIMIT){
-        replace(parent, status.good());
-      } else if (rate >= WEAK_LIMIT){
-        replace(parent, status.weak());
+      if (rate >= definitions.limits.veryStrong) {
+        replace(parent, veryStrong());
+      } else if (rate >= definitions.limits.strong) {
+        replace(parent, strong());
+      } else if (rate >= definitions.limits.good){
+        replace(parent, good());
+      } else if (rate >= definitions.limits.weak){
+        replace(parent, weak());
       } else {
-        replace(parent, status.none());
+        replace(parent, none());
       }
     };
 
     return {
       none : none,
-      weak : weak,
-      good : good,
-      strong : strong,
-      veryStrong : veryStrong,
       show: show,
       hide: hide,
       update: update
     }
 
-  }());
+  };
 
-  var score = (function(status) {
-
-    var defaultRequirements = [
-      { score: function(password) { return password.length * 4; } },
-      { score: function(password) {
-            var score = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/\d/.test(password[i])) {
-                score = score + 4;
-              }
-            }
-            return score;
-          }
-      },
-      { score: function(password) {
-            var lowercaseLetters = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/[a-z]/.test(password[i])) {
-                lowercaseLetters++;
-              }
-            }
-            if (lowercaseLetters === 0) { return 0};
-            return (password.length - lowercaseLetters) * 2;
-          }
-      },
-      { score: function(password) {
-            var uppercaseLetters = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/[A-Z]/.test(password[i])) {
-                uppercaseLetters++;
-              }
-            }
-            if (uppercaseLetters === 0) { return 0};
-            return (password.length - uppercaseLetters) * 2;
-          }
-      },
-      { score: function(password) {
-            var symbols = 0;
-            for (var i = 0; i < password.length; i += 1) {
-              if (/\W/.test(password[i])) {
-                symbols++;
-              }
-            }
-            return symbols * 6;
-          }
-      }
-
-    ];
+  var score = function(definitions) {
 
     function calculate(password) {
       var rate = 0;
-      for (var i = 0; i < defaultRequirements.length; i += 1) {
-        rate = rate + defaultRequirements[i].score(password);
+      for (var i = 0; i < definitions.requirements.length; i += 1) {
+        rate = rate + definitions.requirements[i](password);
       }
       return rate;
     }
@@ -164,9 +132,9 @@
       calculate: calculate,
     };
 
-  }(status));
+  };
 
-  var wrapper = (function(status) {
+  var wrapper = function(status) {
     return {
       passwordStrength : function() {
         var inner = status.none();
@@ -179,7 +147,26 @@
       }
 
     };
-  }(status));
+  };
+
+  function passwordStrength(element, customDefinitions) {
+    var definitions = customDefinitions || defaultDefinitions;
+    var definedStatus = status(definitions);
+
+    var parent = element.parentElement;
+    parent.appendChild(wrapper(definedStatus).passwordStrength());
+
+    element.addEventListener('focusin', function(){
+      definedStatus.show(parent);
+    });
+    element.addEventListener('focusout', function(){
+      definedStatus.hide(parent);
+    });
+    element.addEventListener('input', function(){
+      var rate = score(definitions).calculate(element.value);
+      definedStatus.update(parent, rate);
+    });
+  };
 
   return passwordStrength;
 });
