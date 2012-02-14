@@ -36,7 +36,7 @@ Each requirement function need to return and integer score after evaluating the 
 
 After sending the element to the module, one password strength wrapper is added as a sibling of the element (it gets added to the parent of the element). This wrapper is a 'div' element that contains the score status inside and the class "password_strength" to aid on styling. This status is a 'span' element with the class "score" and the status words inside like "None", "Weak", "Good", "Strong", "Very Strong". The status 'span' element also contains the proper class representing them, to know: "none", "weak", "good", "strong" and "very_strong".
 
-When the password field is selected the password strength 'div' is shown. After each change on the password input field all the requirements are re-evaluated and the current score is calculated. With this new score, the status 'span' element is updated to reflect the current status depending on the limits that were set. 
+The password strength wrapper is currently hidden (adding the class 'hidden' to the score status element). When the password field is selected the password strength is shown (by removing the class 'hidden'). After each change on the password input field all the requirements are re-evaluated and the current score is calculated. With this new score, the status 'span' element is updated to reflect the current status depending on the limits that were set. 
 
 #### Notes
 * Default definitions of limits and requirements are provided and should be enought to start;
