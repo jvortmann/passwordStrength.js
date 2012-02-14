@@ -6,24 +6,7 @@
 
 })('passwordStrength', function definition() {
 
-  function passwordStrength(element, customDefinitions) {
-    var parent = element.parentElement;
-    parent.appendChild(wrapper.passwordStrength());
-
-    element.addEventListener('focusin', function(){
-      status.show(parent);
-    });
-    element.addEventListener('focusout', function(){
-      status.hide(parent);
-    });
-    element.addEventListener('input', function(){
-      var rate = score.calculate(element.value);
-      status.update(parent, rate);
-    });
-  };
-
   var defaultDefinitions = (function(){
-
     function getFlatScore(password, regex, bonus) {
       var score = 0;
       for (var i = 0; i < password.length; i += 1) {
@@ -35,12 +18,8 @@
     }
 
     function getConditionalIncrementalScore(password, regex, bonus) {
-      var score = 0;
-      for (var i = 0; i < password.length; i += 1) {
-        if (/[a-z]/.test(password[i])) {
-          score = score + bonus;
-        }
-      }
+      var score = getFlatScore(password, regex, bonus);
+
       if (score === 0) { return 0};
       return (password.length - score) * 2;
     }
@@ -67,9 +46,7 @@
     }
   }());
 
-  var definitions = defaultDefinitions;
-
-  var status = (function(definitions) {
+  var status = function(definitions) {
 
     function innerTextNode(text, status) {
       var element = document.createElement("span");
@@ -139,9 +116,9 @@
       update: update
     }
 
-  }(definitions));
+  };
 
-  var score = (function(definitions) {
+  var score = function(definitions) {
 
     function calculate(password) {
       var rate = 0;
@@ -155,9 +132,9 @@
       calculate: calculate,
     };
 
-  }(definitions));
+  };
 
-  var wrapper = (function(status) {
+  var wrapper = function(status) {
     return {
       passwordStrength : function() {
         var inner = status.none();
@@ -170,7 +147,26 @@
       }
 
     };
-  }(status));
+  };
+
+  function passwordStrength(element, customDefinitions) {
+    var definitions = customDefinitions || defaultDefinitions;
+    var definedStatus = status(definitions);
+
+    var parent = element.parentElement;
+    parent.appendChild(wrapper(definedStatus).passwordStrength());
+
+    element.addEventListener('focusin', function(){
+      definedStatus.show(parent);
+    });
+    element.addEventListener('focusout', function(){
+      definedStatus.hide(parent);
+    });
+    element.addEventListener('input', function(){
+      var rate = score(definitions).calculate(element.value);
+      definedStatus.update(parent, rate);
+    });
+  };
 
   return passwordStrength;
 });
