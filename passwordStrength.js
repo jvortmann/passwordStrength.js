@@ -77,6 +77,7 @@
       return innerTextNode("Very Strong", "very_strong");
     };
 
+
     function show(parent) {
       var element_score = parent.getElementsByClassName("score")[0];
       element_score.classList.remove("hidden");
@@ -149,23 +150,42 @@
     };
   };
 
+  var dom = function(element) {
+    function parentOf(element) {
+      return element.parentNode;
+    };
+
+    function addWrapperToParent(status){
+      parentOf(element).appendChild(wrapper(status).passwordStrength());
+    };
+
+    function registerEvents(status, score){
+      element.addEventListener('focusin', function(){
+        status.show(parentOf(element));
+      });
+      element.addEventListener('focusout', function(){
+        status.hide(parentOf(element));
+      });
+      element.addEventListener('input', function(){
+        var rate = score.calculate(element.value);
+        status.update(parentOf(element), rate);
+      });
+    };
+
+    return {
+      addWrapperToParent : addWrapperToParent,
+      registerEvents : registerEvents
+    }
+
+  };
+
   function passwordStrength(element, customDefinitions) {
     var definitions = customDefinitions || defaultDefinitions;
     var definedStatus = status(definitions);
+    var domElement = dom(element);
 
-    var parent = element.parentNode;
-    parent.appendChild(wrapper(definedStatus).passwordStrength());
-
-    element.addEventListener('focusin', function(){
-      definedStatus.show(parent);
-    });
-    element.addEventListener('focusout', function(){
-      definedStatus.hide(parent);
-    });
-    element.addEventListener('input', function(){
-      var rate = score(definitions).calculate(element.value);
-      definedStatus.update(parent, rate);
-    });
+    domElement.addWrapperToParent(definedStatus);
+    domElement.registerEvents(definedStatus, score(definitions));
   };
 
   return passwordStrength;
