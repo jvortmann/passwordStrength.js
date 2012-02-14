@@ -14,6 +14,7 @@ To add a password meter to this element you need to send it to passwordStrength 
     passwordStrength(passwordElement);
 
 To add custom requirements to the passwordStrength meter you need to define an objetct that abide to this interface:
+
     var scoreFunction = function(password) {
       ...
       return score;
