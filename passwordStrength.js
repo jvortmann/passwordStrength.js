@@ -153,7 +153,7 @@
     var definitions = customDefinitions || defaultDefinitions;
     var definedStatus = status(definitions);
 
-    var parent = element.parentElement;
+    var parent = element.parentNode;
     parent.appendChild(wrapper(definedStatus).passwordStrength());
 
     element.addEventListener('focusin', function(){
