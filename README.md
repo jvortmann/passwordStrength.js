@@ -49,4 +49,4 @@ We've ran the tests in Chrome and Firefox.
 If you find any incompatibility or want to support other browsers, please do a pull request with the fix! :-)
 
 ### License
-This is licensed under the feel-free-to-do-whatever-you-want-to-do license.
+This software is released under a FreeBSD license. Take a look in the top of 'passwordStrength.js' and the 'license' files for the disclaimer.
