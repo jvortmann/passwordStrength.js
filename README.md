@@ -13,7 +13,13 @@ To add a password meter to this element you need to send it to passwordStrength 
     var passwordElement = document.getElementById('password');
     passwordStrength(passwordElement);
 
-To add custom requirements to the passwordStrength meter you need to define an objetct that abide to this interface:
+To add custom requirements to the passwordStrength meter you need to define an objetct that abide to the following interface:
+
+    var statusObject = {
+      text: "Status",
+      status: "status",
+      limit: 414
+    };
 
     var scoreFunction = function(password) {
       ...
@@ -21,11 +27,11 @@ To add custom requirements to the passwordStrength meter you need to define an o
     }
 
     customRequirements = {
-      limits: { none: 0, weak: 1, good: 2, strong: 3, veryStrong: 4},
+      limits: [ statusObject, ...],
       requirements: [ scoreFunction, ... ]
     }
 
-Each requirement function need to return and integer score after evaluating the password and each limit represents when the score status will change after the evaluation of the sum of the result of applying all the requirements functions.
+Each requirement function needs to return and integer score after evaluating the password and each limit encapsulates the score status. As soon as the rate of the password is above the defined 'limit' field, this status will be set as the new password strength status. The 'text' field is the content of the status 'span' and the 'status' field is used as the class for that element. The status with the lowest limit will be used when the field is empty. (by default there is a "none" status defined with the limit:0, take a look in the code).
 
 ...and then
 

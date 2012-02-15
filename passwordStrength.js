@@ -72,13 +72,47 @@
       return flatScore(password, /\W/, 6);
     };
 
+    var none = {
+      text: "None",
+      status: "none",
+      limit: 0
+    };
+
+    var weak = {
+      text: "Weak",
+      status: "weak",
+      limit: 1
+    };
+
+    var good = {
+      text: "Good",
+      status: "good",
+      limit: 29
+    };
+
+    var strong = {
+      text: "Strong",
+      status: "strong",
+      limit: 59
+    };
+
+    var veryStrong = {
+      text: "Very Strong",
+      status: "very_strong",
+      limit: 89
+    };
+
     return {
-      limits : { none: 0, weak: 1, good: 29, strong: 59, veryStrong: 89},
+      limits : [ none, weak, good, strong, veryStrong ],
       requirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ]
     };
   }());
 
   var status = function (definitions) {
+
+    var sortedLimits = definitions.limits.reverse(function(a, b) {
+      return a.limit - b.limit;
+    });
 
     var innerTextNode = function (text, status) {
       var element = document.createElement("span");
@@ -89,24 +123,8 @@
       return element;
     };
 
-    var none = function () {
-      return innerTextNode("None", "none");
-    };
-
-    var weak = function () {
-      return innerTextNode("Weak", "weak");
-    };
-
-    var good = function () {
-      return innerTextNode("Good", "good");
-    };
-
-    var strong = function () {
-      return innerTextNode("Strong", "strong");
-    };
-
-    var veryStrong = function () {
-      return innerTextNode("Very Strong", "very_strong");
+    var lowestStatus = function () {
+      return innerTextNode(sortedLimits[sortedLimits.length-1].text, sortedLimits[sortedLimits.length-1].status);
     };
 
     var show = function (parent) {
@@ -128,21 +146,18 @@
     };
 
     var update = function (parent, rate) {
-      if (rate >= definitions.limits.veryStrong) {
-        replace(parent, veryStrong());
-      } else if (rate >= definitions.limits.strong) {
-        replace(parent, strong());
-      } else if (rate >= definitions.limits.good) {
-        replace(parent, good());
-      } else if (rate >= definitions.limits.weak) {
-        replace(parent, weak());
-      } else {
-        replace(parent, none());
-      }
+      var i, score;
+      for (i = 0; i < sortedLimits.length; i += 1) {
+        score = sortedLimits[i];
+        if (rate >= score.limit) {
+          replace(parent, innerTextNode(score.text, score.status));
+          return;
+        }
+      };
     };
 
     return {
-      none : none,
+      lowestStatus: lowestStatus,
       show: show,
       hide: hide,
       update: update
@@ -168,7 +183,7 @@
   var wrapper = function (status) {
     return {
       passwordStrength : function () {
-        var inner = status.none();
+        var inner = status.lowestStatus();
         inner.classList.add("hidden");
         var wrapper = document.createElement("div");
         wrapper.className = "password_strength";
