@@ -72,35 +72,11 @@
       return flatScore(password, /\W/, 6);
     };
 
-    var none = {
-      text: "None",
-      status: "none",
-      limit: 0
-    };
-
-    var weak = {
-      text: "Weak",
-      status: "weak",
-      limit: 1
-    };
-
-    var good = {
-      text: "Good",
-      status: "good",
-      limit: 29
-    };
-
-    var strong = {
-      text: "Strong",
-      status: "strong",
-      limit: 59
-    };
-
-    var veryStrong = {
-      text: "Very Strong",
-      status: "very_strong",
-      limit: 89
-    };
+    var none = { text: "None", status: "none", limit: 0 };
+    var weak = { text: "Weak", status: "weak", limit: 1 };
+    var good = { text: "Good", status: "good", limit: 29 };
+    var strong = { text: "Strong", status: "strong", limit: 59 };
+    var veryStrong = { text: "Very Strong", status: "very_strong", limit: 89 };
 
     return {
       limits : [ none, weak, good, strong, veryStrong ],
