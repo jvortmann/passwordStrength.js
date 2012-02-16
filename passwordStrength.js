@@ -147,9 +147,9 @@
       }
     };
 
-    var update = function (parent, invalid, rate) {
-      if (invalid.status) {
-        return replaceForValidation(parent, invalid.validation);
+    var update = function (parent, valid, rate) {
+      if (!valid.status) {
+        return replaceForValidation(parent, valid.validation);
       } else {
         return replaceForRate(parent, rate);
       }
@@ -184,10 +184,10 @@
       var i;
       for (i = 0; i < definitions.validationRequirements.length; i += 1) {
         if (!definitions.validationRequirements[i].valid(password)) {
-          return { status: true, validation: definitions.validationRequirements[i] };
+          return { status: false, validation: definitions.validationRequirements[i] };
         };
       }
-      return { status: false };
+      return { status: true };
     };
 
     return {
@@ -221,10 +221,10 @@
     };
 
     var testAndUpdate = function (element, status, score, validator) {
-        var invalid = validator.test(element.value);
+        var valid = validator.test(element.value);
         var rate = score.calculate(element.value);
 
-        status.update(parentOf(element), invalid, rate);
+        status.update(parentOf(element), valid, rate);
     };
 
     var registerEvents = function (status, score, validator) {
