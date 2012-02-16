@@ -22,8 +22,8 @@ To add custom requirements to the passwordStrength meter you need to define an o
     };
 
     var minimunSize = {
-      message: "Status",
-      status: "status",
+      message: "Too short",
+      status: "too_short",
       valid: function(password) { return password.length > 8 }
     };
 
