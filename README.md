@@ -64,4 +64,4 @@ We've ran the tests in Chrome and Firefox.
 If you find any incompatibility or want to support other browsers, please do a pull request with the fix! :-)
 
 ### License
-This software is released under a FreeBSD license. Take a look in the top of 'passwordStrength.js' and the 'license' files for the disclaimer.
+This software is released under a BSD2 license. Take a look in the top of 'passwordStrength.js' and the 'license' files for the disclaimer.
