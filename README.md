@@ -24,7 +24,7 @@ To add custom requirements to the passwordStrength meter you need to define an o
     var minimunSize = {
       message: "Too short",
       status: "too_short",
-      valid: function(password) { return password.length > 8 }
+      valid: function(password) { return password.length > 4 }
     };
 
     var scoreFunction = function(password) {
@@ -54,7 +54,7 @@ The password strength wrapper is currently hidden (adding the class 'hidden' to 
 
 #### Notes
 * Default definitions of limits and rate requirements are provided and should be enought to start;
-* A validation requirement of minimun password size (8 characters) is provided;
+* A validation requirement of minimun password size (4 characters) is provided;
 * One css example is provided;
 * You have to provide the raw element, not the one wrapped by your favorite dom query lib. Using jQuery, for example, you'd need to do something like `var passwordElement = $('#passwordElement').get(0);`
 * If you are using AMD (e.g. require.js) this lib becomes a module. Otherwise it'll create a global `passwordStrength`.
