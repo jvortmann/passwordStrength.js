@@ -75,7 +75,7 @@
       message: "Too short",
       status: "too_short",
       valid: function (password) {
-               return password.length > 8;
+               return password.length > 4;
              }
     };
 
@@ -98,39 +98,82 @@
       return a.limit - b.limit;
     });
 
-    var innerTextNode = function (text, status) {
-      var element = document.createElement("span");
-      element.className = "score";
-      element.innerHTML = text;
-      element.classList.add(status);
+    var innerMessageWrapper = function (text) {
+      var messageWrapper = document.createElement("div");
+      messageWrapper.className = "message";
 
-      return element;
+      var message = document.createElement("span");
+      message.innerHTML = text;
+
+      messageWrapper.appendChild(message);
+
+      return messageWrapper;
     };
 
-    var lowestStatus = function () {
-      return innerTextNode(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status);
+    var innerScoreBarWrapper = function (score) {
+      var barWrapper = document.createElement("div");
+      barWrapper.className = "bar";
+
+      var meter = document.createElement("span");
+      meter.className = "meter";
+      meter.innerHTML = meterBar(score);
+
+      var bar = document.createElement("span");
+      bar.className = "score";
+      bar.innerHTML = score;
+
+      barWrapper.appendChild(bar);
+      barWrapper.appendChild(meter);
+
+      return barWrapper;
     };
 
-    var show = function (parent) {
-      var element_score = parent.getElementsByClassName("score")[0];
-      element_score.classList.remove("hidden");
+    var meterBar = function (score) {
+      var i, text = "";
+      for (i = 0; i < score; i += 1) {
+        text = text.concat("-");
+      }
+      return text;
     };
 
-    var hide = function (parent) {
-      var element_score = parent.getElementsByClassName("score")[0];
-      element_score.classList.add("hidden");
+    var wrapper = function (text, status, score) {
+      var message = innerMessageWrapper(text);
+      var score = innerScoreBarWrapper(score);
+
+      var wrapperElement = document.createElement("div");
+      wrapperElement.id = "password_strength";
+
+      wrapperElement.classList.add(status);
+      wrapperElement.appendChild(message);
+      wrapperElement.appendChild(score);
+
+      return wrapperElement;
+    };
+
+    var defaultWrapper = function () {
+      var defaultWrapperElement = wrapper(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status, 0);
+      defaultWrapperElement.classList.add("hidden");
+
+      return defaultWrapperElement;
+    };
+
+    var show = function () {
+      var wrapper = document.getElementById("password_strength");
+      wrapper.classList.remove("hidden");
+    };
+
+    var hide = function () {
+      var wrapper = document.getElementById("password_strength");
+      wrapper.classList.add("hidden");
     };
 
     var replace = function (parent, newStatus) {
-      var elementStrength = parent.getElementsByClassName("password_strength")[0];
-      var elementStatus = elementStrength.getElementsByClassName("score")[0];
-
-      elementStrength.removeChild(elementStatus);
-      elementStrength.appendChild(newStatus);
+      var oldStatus = document.getElementById("password_strength");
+      parent.replaceChild(newStatus, oldStatus);
     };
 
     var replaceForValidation = function (parent, validation) {
-      var invalidElement = innerTextNode(validation.message, validation.status, "invalid");
+      var invalidElement = wrapper(validation.message, validation.status, 0);
       invalidElement.classList.add("invalid");
 
       replace(parent, invalidElement);
@@ -141,7 +184,7 @@
       for (i = 0; i < sortedLimits.length; i += 1) {
         score = sortedLimits[i];
         if (rate >= score.limit) {
-          replace(parent, innerTextNode(score.message, score.status));
+          replace(parent, wrapper(score.message, score.status, rate));
           return;
         }
       }
@@ -156,7 +199,7 @@
     };
 
     return {
-      lowestStatus: lowestStatus,
+      defaultWrapper: defaultWrapper,
       show: show,
       hide: hide,
       update: update
@@ -196,28 +239,13 @@
 
   };
 
-  var wrapper = function (status) {
-    return {
-      passwordStrength : function () {
-        var inner = status.lowestStatus();
-        inner.classList.add("hidden");
-        var wrapper = document.createElement("div");
-        wrapper.className = "password_strength";
-        wrapper.appendChild(inner);
-
-        return wrapper;
-      }
-
-    };
-  };
-
   var dom = function (element) {
     var parentOf = function (element) {
       return element.parentNode;
     };
 
     var addWrapperToParent = function (status) {
-      parentOf(element).appendChild(wrapper(status).passwordStrength());
+      parentOf(element).appendChild(status.defaultWrapper());
     };
 
     var testAndUpdate = function (element, status, score, validator) {
@@ -229,12 +257,12 @@
 
     var registerEvents = function (status, score, validator) {
       element.addEventListener('focusin', function () {
-        status.show(parentOf(element));
+        status.show();
 
         testAndUpdate(element, status, score, validator);
       });
       element.addEventListener('focusout', function () {
-        status.hide(parentOf(element));
+        status.hide();
       });
       element.addEventListener('input', function () {
         testAndUpdate(element, status, score, validator);
