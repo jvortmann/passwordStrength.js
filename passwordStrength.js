@@ -71,16 +71,24 @@
     var containsSymbols = function (password) {
       return flatScore(password, /\W/, 6);
     };
+    var minimumPasswordSize = {
+      message: "Too short",
+      status: "too_short",
+      valid: function (password) {
+               return password.length > 8;
+             }
+    };
 
-    var none = { text: "None", status: "none", limit: 0 };
-    var weak = { text: "Weak", status: "weak", limit: 1 };
-    var good = { text: "Good", status: "good", limit: 29 };
-    var strong = { text: "Strong", status: "strong", limit: 59 };
-    var veryStrong = { text: "Very Strong", status: "very_strong", limit: 89 };
+    var none = { message: "None", status: "none", limit: 0 };
+    var weak = { message: "Weak", status: "weak", limit: 1 };
+    var good = { message: "Good", status: "good", limit: 29 };
+    var strong = { message: "Strong", status: "strong", limit: 59 };
+    var veryStrong = { message: "Very Strong", status: "very_strong", limit: 89 };
 
     return {
       limits : [ none, weak, good, strong, veryStrong ],
-      requirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ]
+      rateRequirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ],
+      validationRequirements: [ minimumPasswordSize ]
     };
   }());
 
@@ -100,7 +108,7 @@
     };
 
     var lowestStatus = function () {
-      return innerTextNode(sortedLimits[sortedLimits.length-1].text, sortedLimits[sortedLimits.length-1].status);
+      return innerTextNode(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status);
     };
 
     var show = function (parent) {
@@ -121,15 +129,30 @@
       elementStrength.appendChild(newStatus);
     };
 
-    var update = function (parent, rate) {
+    var replaceForValidation = function (parent, validation) {
+      var invalidElement = innerTextNode(validation.message, validation.status, "invalid");
+      invalidElement.classList.add("invalid");
+
+      replace(parent, invalidElement);
+    };
+
+    var replaceForRate = function (parent, rate) {
       var i, score;
       for (i = 0; i < sortedLimits.length; i += 1) {
         score = sortedLimits[i];
         if (rate >= score.limit) {
-          replace(parent, innerTextNode(score.text, score.status));
+          replace(parent, innerTextNode(score.message, score.status));
           return;
         }
-      };
+      }
+    };
+
+    var update = function (parent, invalid, rate) {
+      if (invalid.status) {
+        return replaceForValidation(parent, invalid.validation);
+      } else {
+        return replaceForRate(parent, rate);
+      }
     };
 
     return {
@@ -144,14 +167,31 @@
   var score = function (definitions) {
     var calculate = function (password) {
       var rate = 0, i;
-      for (i = 0; i < definitions.requirements.length; i += 1) {
-        rate = rate + definitions.requirements[i](password);
+      for (i = 0; i < definitions.rateRequirements.length; i += 1) {
+        rate = rate + definitions.rateRequirements[i](password);
       }
       return rate;
     };
 
     return {
       calculate: calculate
+    };
+
+  };
+
+  var validator = function (definitions) {
+    var test = function (password) {
+      var i;
+      for (i = 0; i < definitions.validationRequirements.length; i += 1) {
+        if (!definitions.validationRequirements[i].valid(password)) {
+          return { status: true, validation: definitions.validationRequirements[i] };
+        };
+      }
+      return { status: false };
+    };
+
+    return {
+      test: test
     };
 
   };
@@ -180,16 +220,24 @@
       parentOf(element).appendChild(wrapper(status).passwordStrength());
     };
 
-    var registerEvents = function (status, score) {
+    var testAndUpdate = function (element, status, score, validator) {
+        var invalid = validator.test(element.value);
+        var rate = score.calculate(element.value);
+
+        status.update(parentOf(element), invalid, rate);
+    };
+
+    var registerEvents = function (status, score, validator) {
       element.addEventListener('focusin', function () {
         status.show(parentOf(element));
+
+        testAndUpdate(element, status, score, validator);
       });
       element.addEventListener('focusout', function () {
         status.hide(parentOf(element));
       });
       element.addEventListener('input', function () {
-        var rate = score.calculate(element.value);
-        status.update(parentOf(element), rate);
+        testAndUpdate(element, status, score, validator);
       });
     };
 
@@ -206,7 +254,7 @@
     var domElement = dom(element);
 
     domElement.addWrapperToParent(definedStatus);
-    domElement.registerEvents(definedStatus, score(definitions));
+    domElement.registerEvents(definedStatus, score(definitions), validator(definitions));
   };
 
   return passwordStrength;
