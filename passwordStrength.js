@@ -1,31 +1,32 @@
-/* Copyright (c) 2012, Joao Alberto Vortmann
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-The views and conclusions contained in the software and documentation are those
-of the authors and should not be interpreted as representing official policies, 
-either expressed or implied, of the FreeBSD Project.
+/**
+ * PasswordStrength.js - add a password strength meter easily to your page
+ * Copyright (C) 2012 Joao Alberto Vortmann
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY Joao Alberto Vortmann ''AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL Joao Alberto Vortmann BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * The views and conclusions contained in the software and documentation
+ * are those of the authors and should not be interpreted as representing
+ * official policies, either expressed or implied, of Joao Alberto Vortmann.
 */
-
 !(function (moduleName, definition) {
   // Whether to expose PasswordStrength as an AMD module
   // or to the global object.
@@ -70,14 +71,32 @@ either expressed or implied, of the FreeBSD Project.
     var containsSymbols = function (password) {
       return flatScore(password, /\W/, 6);
     };
+    var minimumPasswordSize = {
+      message: "Too short",
+      status: "too_short",
+      valid: function (password) {
+               return password.length > 8;
+             }
+    };
+
+    var none = { message: "None", status: "none", limit: 0 };
+    var weak = { message: "Weak", status: "weak", limit: 1 };
+    var good = { message: "Good", status: "good", limit: 29 };
+    var strong = { message: "Strong", status: "strong", limit: 59 };
+    var veryStrong = { message: "Very Strong", status: "very_strong", limit: 89 };
 
     return {
-      limits : { none: 0, weak: 1, good: 29, strong: 59, veryStrong: 89},
-      requirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ]
+      limits : [ none, weak, good, strong, veryStrong ],
+      rateRequirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ],
+      validationRequirements: [ minimumPasswordSize ]
     };
   }());
 
   var status = function (definitions) {
+
+    var sortedLimits = definitions.limits.reverse(function(a, b) {
+      return a.limit - b.limit;
+    });
 
     var innerTextNode = function (text, status) {
       var element = document.createElement("span");
@@ -88,24 +107,8 @@ either expressed or implied, of the FreeBSD Project.
       return element;
     };
 
-    var none = function () {
-      return innerTextNode("None", "none");
-    };
-
-    var weak = function () {
-      return innerTextNode("Weak", "weak");
-    };
-
-    var good = function () {
-      return innerTextNode("Good", "good");
-    };
-
-    var strong = function () {
-      return innerTextNode("Strong", "strong");
-    };
-
-    var veryStrong = function () {
-      return innerTextNode("Very Strong", "very_strong");
+    var lowestStatus = function () {
+      return innerTextNode(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status);
     };
 
     var show = function (parent) {
@@ -126,22 +129,34 @@ either expressed or implied, of the FreeBSD Project.
       elementStrength.appendChild(newStatus);
     };
 
-    var update = function (parent, rate) {
-      if (rate >= definitions.limits.veryStrong) {
-        replace(parent, veryStrong());
-      } else if (rate >= definitions.limits.strong) {
-        replace(parent, strong());
-      } else if (rate >= definitions.limits.good) {
-        replace(parent, good());
-      } else if (rate >= definitions.limits.weak) {
-        replace(parent, weak());
+    var replaceForValidation = function (parent, validation) {
+      var invalidElement = innerTextNode(validation.message, validation.status, "invalid");
+      invalidElement.classList.add("invalid");
+
+      replace(parent, invalidElement);
+    };
+
+    var replaceForRate = function (parent, rate) {
+      var i, score;
+      for (i = 0; i < sortedLimits.length; i += 1) {
+        score = sortedLimits[i];
+        if (rate >= score.limit) {
+          replace(parent, innerTextNode(score.message, score.status));
+          return;
+        }
+      }
+    };
+
+    var update = function (parent, invalid, rate) {
+      if (invalid.status) {
+        return replaceForValidation(parent, invalid.validation);
       } else {
-        replace(parent, none());
+        return replaceForRate(parent, rate);
       }
     };
 
     return {
-      none : none,
+      lowestStatus: lowestStatus,
       show: show,
       hide: hide,
       update: update
@@ -152,8 +167,8 @@ either expressed or implied, of the FreeBSD Project.
   var score = function (definitions) {
     var calculate = function (password) {
       var rate = 0, i;
-      for (i = 0; i < definitions.requirements.length; i += 1) {
-        rate = rate + definitions.requirements[i](password);
+      for (i = 0; i < definitions.rateRequirements.length; i += 1) {
+        rate = rate + definitions.rateRequirements[i](password);
       }
       return rate;
     };
@@ -164,10 +179,27 @@ either expressed or implied, of the FreeBSD Project.
 
   };
 
+  var validator = function (definitions) {
+    var test = function (password) {
+      var i;
+      for (i = 0; i < definitions.validationRequirements.length; i += 1) {
+        if (!definitions.validationRequirements[i].valid(password)) {
+          return { status: true, validation: definitions.validationRequirements[i] };
+        };
+      }
+      return { status: false };
+    };
+
+    return {
+      test: test
+    };
+
+  };
+
   var wrapper = function (status) {
     return {
       passwordStrength : function () {
-        var inner = status.none();
+        var inner = status.lowestStatus();
         inner.classList.add("hidden");
         var wrapper = document.createElement("div");
         wrapper.className = "password_strength";
@@ -188,16 +220,24 @@ either expressed or implied, of the FreeBSD Project.
       parentOf(element).appendChild(wrapper(status).passwordStrength());
     };
 
-    var registerEvents = function (status, score) {
+    var testAndUpdate = function (element, status, score, validator) {
+        var invalid = validator.test(element.value);
+        var rate = score.calculate(element.value);
+
+        status.update(parentOf(element), invalid, rate);
+    };
+
+    var registerEvents = function (status, score, validator) {
       element.addEventListener('focusin', function () {
         status.show(parentOf(element));
+
+        testAndUpdate(element, status, score, validator);
       });
       element.addEventListener('focusout', function () {
         status.hide(parentOf(element));
       });
       element.addEventListener('input', function () {
-        var rate = score.calculate(element.value);
-        status.update(parentOf(element), rate);
+        testAndUpdate(element, status, score, validator);
       });
     };
 
@@ -214,7 +254,7 @@ either expressed or implied, of the FreeBSD Project.
     var domElement = dom(element);
 
     domElement.addWrapperToParent(definedStatus);
-    domElement.registerEvents(definedStatus, score(definitions));
+    domElement.registerEvents(definedStatus, score(definitions), validator(definitions));
   };
 
   return passwordStrength;
