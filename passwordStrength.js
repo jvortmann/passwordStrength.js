@@ -151,10 +151,7 @@
     };
 
     var defaultWrapper = function () {
-      var defaultWrapperElement = wrapper(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status, 0);
-      defaultWrapperElement.classList.add("hidden");
-
-      return defaultWrapperElement;
+      return wrapper(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status, 0);
     };
 
     var show = function () {
@@ -188,6 +185,7 @@
           return;
         }
       }
+      replace(parent, defaultWrapper());
     };
 
     var update = function (parent, valid, rate) {
@@ -245,7 +243,10 @@
     };
 
     var addWrapperToParent = function (status) {
-      parentOf(element).appendChild(status.defaultWrapper());
+      var initStatus = status.defaultWrapper();
+      initStatus.classList.add("hidden");
+
+      parentOf(element).appendChild(initStatus);
     };
 
     var testAndUpdate = function (element, status, score, validator) {
