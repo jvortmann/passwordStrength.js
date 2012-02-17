@@ -244,7 +244,7 @@
 
   };
 
-  var dom = function (element) {
+  var setup = function (element) {
     var parentOf = function (element) {
       return element.parentNode;
     };
@@ -287,7 +287,7 @@
   var passwordStrength = function (element, customDefinitions) {
     var definitions = customDefinitions || defaultDefinitions;
     var definedStatus = status(definitions);
-    var domElement = dom(element);
+    var domElement = setup(element);
 
     domElement.addWrapperToParent(definedStatus);
     domElement.registerEvents(definedStatus, score(definitions), validator(definitions));
