@@ -86,9 +86,9 @@
     var veryStrong = { message: "Very Strong", status: "very_strong", limit: 90 };
 
     return {
-      limits : [ none, weak, good, strong, veryStrong ],
-      rateRequirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ],
-      validationRequirements: [ minimumPasswordSize ]
+      limits: [ none, weak, good, strong, veryStrong ],
+      rates: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ],
+      validations: [ minimumPasswordSize ]
     };
   }());
 
@@ -208,8 +208,8 @@
   var score = function (definitions) {
     var calculate = function (password) {
       var rate = 0, i;
-      for (i = 0; i < definitions.rateRequirements.length; i += 1) {
-        rate = rate + definitions.rateRequirements[i](password);
+      for (i = 0; i < definitions.rates.length; i += 1) {
+        rate = rate + definitions.rates[i](password);
       }
       return rate;
     };
@@ -223,9 +223,9 @@
   var validator = function (definitions) {
     var test = function (password) {
       var i;
-      for (i = 0; i < definitions.validationRequirements.length; i += 1) {
-        if (!definitions.validationRequirements[i].valid(password)) {
-          return { status: false, validation: definitions.validationRequirements[i] };
+      for (i = 0; i < definitions.validations.length; i += 1) {
+        if (!definitions.validations[i].valid(password)) {
+          return { status: false, validation: definitions.validations[i] };
         };
       }
       return { status: true };
