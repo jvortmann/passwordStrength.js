@@ -80,10 +80,10 @@
     };
 
     var none = { message: "None", status: "none", limit: 0 };
-    var weak = { message: "Weak", status: "weak", limit: 1 };
-    var good = { message: "Good", status: "good", limit: 29 };
-    var strong = { message: "Strong", status: "strong", limit: 59 };
-    var veryStrong = { message: "Very Strong", status: "very_strong", limit: 89 };
+    var weak = { message: "Weak", status: "weak", limit: 0.9 };
+    var good = { message: "Good", status: "good", limit: 30 };
+    var strong = { message: "Strong", status: "strong", limit: 60 };
+    var veryStrong = { message: "Very Strong", status: "very_strong", limit: 90 };
 
     return {
       limits : [ none, weak, good, strong, veryStrong ],
@@ -183,7 +183,7 @@
       var i, score;
       for (i = 0; i < sortedLimits.length; i += 1) {
         score = sortedLimits[i];
-        if (rate >= score.limit) {
+        if (rate > score.limit) {
           replace(parent, wrapper(score.message, score.status, rate));
           return;
         }
