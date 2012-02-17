@@ -264,17 +264,17 @@
     };
 
     var registerEvents = function (status, score, validator) {
-      element.addEventListener("focus", function () {
+      element.onfocus = function () {
         status.show();
 
         testAndUpdate(element, status, score, validator);
-      });
-      element.addEventListener("blur", function () {
+      };
+      element.onblur = function () {
         status.hide();
-      });
-      element.addEventListener("input", function () {
+      };
+      element.oninput = function () {
         testAndUpdate(element, status, score, validator);
-      });
+      };
     };
 
     return {
