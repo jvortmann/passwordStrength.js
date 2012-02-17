@@ -80,15 +80,15 @@
     };
 
     var none = { message: "None", status: "none", limit: 0 };
-    var weak = { message: "Weak", status: "weak", limit: 1 };
-    var good = { message: "Good", status: "good", limit: 29 };
-    var strong = { message: "Strong", status: "strong", limit: 59 };
-    var veryStrong = { message: "Very Strong", status: "very_strong", limit: 89 };
+    var weak = { message: "Weak", status: "weak", limit: 0.9 };
+    var good = { message: "Good", status: "good", limit: 30 };
+    var strong = { message: "Strong", status: "strong", limit: 60 };
+    var veryStrong = { message: "Very Strong", status: "very_strong", limit: 90 };
 
     return {
-      limits : [ none, weak, good, strong, veryStrong ],
-      rateRequirements: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ],
-      validationRequirements: [ minimumPasswordSize ]
+      limits: [ none, weak, good, strong, veryStrong ],
+      rates: [ passwordSize, containsNumber, containsLowercaseLetter, containsUppercaseLetter, containsSymbols ],
+      validations: [ minimumPasswordSize ]
     };
   }());
 
@@ -151,10 +151,7 @@
     };
 
     var defaultWrapper = function () {
-      var defaultWrapperElement = wrapper(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status, 0);
-      defaultWrapperElement.classList.add("hidden");
-
-      return defaultWrapperElement;
+      return wrapper(sortedLimits[sortedLimits.length-1].message, sortedLimits[sortedLimits.length-1].status, 0);
     };
 
     var show = function () {
@@ -167,34 +164,42 @@
       wrapper.classList.add("hidden");
     };
 
-    var replace = function (parent, newStatus) {
-      var oldStatus = document.getElementById("password_strength");
-      parent.replaceChild(newStatus, oldStatus);
+    var parentOf = function (element) {
+      return element.parentNode;
+    }
+
+    var current = function() {
+      return document.getElementById("password_strength");
     };
 
-    var replaceForValidation = function (parent, validation) {
+    var replace = function (newStatus) {
+      parentOf(current()).replaceChild(newStatus, current());
+    };
+
+    var replaceForValidation = function (validation) {
       var invalidElement = wrapper(validation.message, validation.status, 0);
       invalidElement.classList.add("invalid");
 
-      replace(parent, invalidElement);
+      replace(invalidElement);
     };
 
-    var replaceForRate = function (parent, rate) {
+    var replaceForRate = function (rate) {
       var i, score;
       for (i = 0; i < sortedLimits.length; i += 1) {
         score = sortedLimits[i];
-        if (rate >= score.limit) {
-          replace(parent, wrapper(score.message, score.status, rate));
+        if (rate > score.limit) {
+          replace(wrapper(score.message, score.status, rate));
           return;
         }
       }
+      replace(defaultWrapper());
     };
 
-    var update = function (parent, valid, rate) {
+    var update = function (valid, rate) {
       if (!valid.status) {
-        return replaceForValidation(parent, valid.validation);
+        return replaceForValidation(valid.validation);
       } else {
-        return replaceForRate(parent, rate);
+        return replaceForRate(rate);
       }
     };
 
@@ -210,8 +215,8 @@
   var score = function (definitions) {
     var calculate = function (password) {
       var rate = 0, i;
-      for (i = 0; i < definitions.rateRequirements.length; i += 1) {
-        rate = rate + definitions.rateRequirements[i](password);
+      for (i = 0; i < definitions.rates.length; i += 1) {
+        rate = rate + definitions.rates[i](password);
       }
       return rate;
     };
@@ -225,9 +230,9 @@
   var validator = function (definitions) {
     var test = function (password) {
       var i;
-      for (i = 0; i < definitions.validationRequirements.length; i += 1) {
-        if (!definitions.validationRequirements[i].valid(password)) {
-          return { status: false, validation: definitions.validationRequirements[i] };
+      for (i = 0; i < definitions.validations.length; i += 1) {
+        if (!definitions.validations[i].valid(password)) {
+          return { status: false, validation: definitions.validations[i] };
         };
       }
       return { status: true };
@@ -239,20 +244,23 @@
 
   };
 
-  var dom = function (element) {
+  var setup = function (element) {
     var parentOf = function (element) {
       return element.parentNode;
     };
 
     var addWrapperToParent = function (status) {
-      parentOf(element).appendChild(status.defaultWrapper());
+      var initStatus = status.defaultWrapper();
+      initStatus.classList.add("hidden");
+
+      parentOf(element).appendChild(initStatus);
     };
 
     var testAndUpdate = function (element, status, score, validator) {
         var valid = validator.test(element.value);
         var rate = score.calculate(element.value);
 
-        status.update(parentOf(element), valid, rate);
+        status.update(valid, rate);
     };
 
     var registerEvents = function (status, score, validator) {
@@ -279,7 +287,7 @@
   var passwordStrength = function (element, customDefinitions) {
     var definitions = customDefinitions || defaultDefinitions;
     var definedStatus = status(definitions);
-    var domElement = dom(element);
+    var domElement = setup(element);
 
     domElement.addWrapperToParent(definedStatus);
     domElement.registerEvents(definedStatus, score(definitions), validator(definitions));
