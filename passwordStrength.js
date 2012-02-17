@@ -273,6 +273,7 @@
         status.hide();
       });
       element.addEventListener("input", function () {
+        alert("input");
         console.log("input");
         testAndUpdate(element, status, score, validator);
       });
