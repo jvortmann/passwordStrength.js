@@ -30,13 +30,13 @@
 !(function (moduleName, definition) {
   // Whether to expose PasswordStrength as an AMD module
   // or to the global object.
-  if (typeof define === 'function' && typeof define.amd === 'object') {
+  if (typeof define === "function" && typeof define.amd === "object") {
     define(definition);
   } else {
     this[moduleName] = definition();
   }
 
-}('passwordStrength', function definition() {
+}("passwordStrength", function definition() {
 
   var defaultDefinitions = (function () {
     var flatScore = function (password, regex, bonus) {
@@ -264,15 +264,15 @@
     };
 
     var registerEvents = function (status, score, validator) {
-      element.addEventListener('focusin', function () {
+      element.addEventListener("focus", function () {
         status.show();
 
         testAndUpdate(element, status, score, validator);
       });
-      element.addEventListener('focusout', function () {
+      element.addEventListener("blur", function () {
         status.hide();
       });
-      element.addEventListener('input', function () {
+      element.addEventListener("input", function () {
         testAndUpdate(element, status, score, validator);
       });
     };
