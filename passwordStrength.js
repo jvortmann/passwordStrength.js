@@ -100,9 +100,9 @@
 
     var innerMessageWrapper = function (text) {
       var messageWrapper = document.createElement("div");
-      messageWrapper.className = "message";
 
       var message = document.createElement("span");
+      message.className = "message";
       message.innerHTML = text;
 
       messageWrapper.appendChild(message);
