@@ -263,16 +263,26 @@
         status.update(valid, rate);
     };
 
-    var registerEvents = function (status, score, validator) {
-      element.addEventListener("focus", function () {
-        status.show();
+    var registerEventOn = function (element, event, callback) {
+      if (element.addEventListener) {
+        element.addEventListener(event, callback, false);
+      } else {
+        element.attachEvent("on" + event, callback);
+      }
+    };
 
+    var registerEvents = function (status, score, validator) {
+      registerEventOn(element, "focus", function () {
+        status.show();
         testAndUpdate(element, status, score, validator);
       });
-      element.addEventListener("blur", function () {
+      registerEventOn(element, "blur", function () {
         status.hide();
       });
-      element.addEventListener("input", function () {
+      registerEventOn(element, "input", function () {
+        testAndUpdate(element, status, score, validator);
+      });
+      registerEventOn(element, "propertychange", function () {
         testAndUpdate(element, status, score, validator);
       });
     };
