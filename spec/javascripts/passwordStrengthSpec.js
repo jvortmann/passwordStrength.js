@@ -1,7 +1,7 @@
 describe("Password Strength", function() {
   describe('when using default configuration', function () {
     beforeEach(function () {
-      loadFixtures("test.html");
+      loadFixtures("passwordStrengthSpec.html");
 
     });
   
