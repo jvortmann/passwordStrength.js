@@ -9,7 +9,7 @@ describe("Password Strength", function() {
     beforeEach(function () {
       loadFixtures("passwordStrengthSpec.html");
       passwordField = $("#password").get(0);
-      passwordStrength(passwordField);
+      passwordStrength(passwordField, defaultPasswordStrengthDefinitions);
     });
 
     it('should be hidden by default', function () {
