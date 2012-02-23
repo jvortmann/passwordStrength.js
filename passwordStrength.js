@@ -94,7 +94,7 @@
 
   var status = function (definitions) {
 
-    var sortedLimits = definitions.limits.reverse(function(a, b) {
+    var sortedLimits =  definitions.limits.slice().reverse(function(a, b) {
       return a.limit - b.limit;
     });
 
